@@ -4,6 +4,7 @@ from PyQt5.QtCore import *
 
 from mainwindow_ui import Ui_MainWindow
 import weather_request as weather_api
+from datetime import datetime
 
 config = {
     'city': {
@@ -21,32 +22,77 @@ city = config['city']
 passport = config['passport']
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    labelCity = None
-
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
+        self.threadpool = QThreadPool()
         
         self.setWindowTitle('weather')
 
-        self.labelCity = QLabel("city: %s in country: %s" % (city['name'], city['country']), self)
+        self.labelCity = QLabel(parent=self)
         self.statusbar.addWidget(self.labelCity)
-        currentWeather = weather_api.getCurrentWeather(city['id'], passport['apikey'])
-        nextWeather = weather_api.getHoursForecastData(city['id'], passport['apikey'], 16)
+        self.updateStatusBar(city['name'], city['country'])
 
+        getCurrentWeatherWorker = RequestWorker(lambda : weather_api.getCurrentWeather(city['id'], passport['apikey']))
+        getCurrentWeatherWorker.signals.result.connect(lambda objdata: self.updateCurrentWeather(objdata['weather'][0]['description'], objdata['main']['temp']))
 
+        getNextHoursWeatherWorker = RequestWorker(lambda: weather_api.getHoursForecastData(city['id'], passport['apikey']))
+        getNextHoursWeatherWorker.signals.result.connect(lambda objdata: self.updateNextHoursWeather(objdata['list']))
+        
+        self.threadpool.start(getCurrentWeatherWorker)
+        self.threadpool.start(getNextHoursWeatherWorker)
+
+    def updateStatusBar(self, cityName, cityCountry):
+        self.labelCity.setText(f"city: {cityName} in country: {cityCountry}")
+
+    def updateNextHoursWeather(self, weatherList):
+        for item in weatherList:
+            widget = QWidget(parent=self)
+            layout = QHBoxLayout()
+
+            temp = QLabel(f"температура {item['main']['temp']}°C")
+            icon = QLabel()
+            self.setIconToLabel(icon, item['weather'][0]['icon'])
+
+            # "2019-06-18 06:00:00" input time
+            time =  QLabel(str(datetime.strptime(item['dt_txt'],'%Y-%m-%d %H:%M:%S')))
+
+            layout.addWidget(temp)
+            layout.addWidget(icon)
+            layout.addWidget(time)
+            widget.setLayout(layout)
+            self.weatherList.addWidget(widget)
+
+    def updateCurrentWeather(self, description, temp):
         weatherStr = f"""
-        Сейчас в {city['where']} {currentWeather['weather'][0]['description']}\n
-        температура {currentWeather['main']['temp']}°C
+        Сейчас в {city['where']} {description}\n
+        температура {temp}°C
         """
-
         self.current.setText(weatherStr)
-
-        # res = req.get()
 
     def setIconToLabel(self, label, icon):
         pxm = QPixmap(f'./img/{icon}.png')
         label.setPixmap(pxm)
 
+class RequestWorker(QRunnable):
+    class Signals(QObject):
+        finished = pyqtSignal()
+        result = pyqtSignal(dict)
+        error = pyqtSignal(str)
 
-    
+        def __init__(self, parent=None):
+                return super().__init__(parent=parent)
+
+    def __init__(self, request, parent=None):
+        super(RequestWorker, self).__init__()
+        self.request = request
+        self.signals = RequestWorker.Signals(parent=parent)
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            result = self.request()
+            self.signals.result.emit(result)
+        except Exception as err:
+            self.signals.error.emit(str(err))
+        self.signals.finished.emit()
