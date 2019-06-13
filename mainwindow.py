@@ -31,8 +31,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.labelCity = QLabel(parent=self)
         self.statusbar.addWidget(self.labelCity)
-        self.updateStatusBar(city['name'], city['country'])
+        self.updateData()
 
+    def updateData(self):
+        self.updateStatusBar(city['name'], city['country'])
+        
         getCurrentWeatherWorker = RequestWorker(lambda : weather_api.getCurrentWeather(city['id'], passport['apikey']))
         getCurrentWeatherWorker.signals.result.connect(lambda objdata: self.updateCurrentWeather(objdata['weather'][0]['description'], objdata['main']['temp']))
 
@@ -54,12 +57,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             icon = QLabel()
             self.setIconToLabel(icon, item['weather'][0]['icon'])
 
-            # "2019-06-18 06:00:00" input time
-            time =  QLabel(str(datetime.strptime(item['dt_txt'],'%Y-%m-%d %H:%M:%S')))
+            dtime = datetime.fromtimestamp(item['dt'])
+            time =  QLabel('В %s часов %s' % (dtime.strftime('%H'), dtime.strftime('%d.%m')))
 
+            layout.addWidget(time)
             layout.addWidget(temp)
             layout.addWidget(icon)
-            layout.addWidget(time)
+
             widget.setLayout(layout)
             self.weatherList.addWidget(widget)
 
