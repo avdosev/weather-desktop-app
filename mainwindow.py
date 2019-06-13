@@ -2,24 +2,15 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
-from mainwindow_ui import Ui_MainWindow
-import weather_request as weather_api
 from datetime import datetime
 
-config = {
-    'city': {
-        "id": 472757,
-        "name": "Volgograd",
-        "where": "Волгограде",
-        "country": "RU"
-    },
-    'passport': {
-        'apikey': '074390fbe455e62f1e92d57331c0fcf7',
-    },
-}
+from mainwindow_ui import Ui_MainWindow
+import weather_request as weather_api
+from read_json_file import readJsonFromFile
 
-city = config['city']
-passport = config['passport']
+def setIconToLabel(label, icon):
+    pxm = QPixmap(f'./img/{icon}.png')
+    label.setPixmap(pxm)
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -31,15 +22,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.labelCity = QLabel(parent=self)
         self.statusbar.addWidget(self.labelCity)
+        
+        self.setting = QSettings()
+        default_setting = readJsonFromFile('./default_setting.json')
+        citylist = readJsonFromFile('./city_list.json')
+
+        # apikey = self.setting.value('setting/apikey', defaultValue=default_setting['apikey'], type=str)
+        # cityID = self.setting.value('setting/cityID', defaultValue=default_setting['cityID'],type=int)
+        apikey = self.setting.value('setting/apikey', type=str)
+        cityID = self.setting.value('setting/cityID', type=int)
+
+        print(apikey, cityID)
+
+        for city in citylist:
+            if city['id'] == cityID:
+                self.config = {
+                    'apikey':apikey,
+                    'city': city
+                }
+                break
+
         self.updateData()
 
+    def __del__(self):
+        self.setting.setValue('setting/apikey', self.config['apikey'])
+        self.setting.setValue('setting/cityID', self.config['city']['id'])
+        self.setting.sync()
+
     def updateData(self):
-        self.updateStatusBar(city['name'], city['country'])
+        self.updateStatusBar(self.config['city']['name'], self.config['city']['country'])
         
-        getCurrentWeatherWorker = RequestWorker(lambda : weather_api.getCurrentWeather(city['id'], passport['apikey']))
+        getCurrentWeatherWorker = RequestWorker(lambda : weather_api.getCurrentWeather(self.config['city']['id'], self.config['apikey']))
         getCurrentWeatherWorker.signals.result.connect(lambda objdata: self.updateCurrentWeather(objdata['weather'][0]['description'], objdata['main']['temp']))
 
-        getNextHoursWeatherWorker = RequestWorker(lambda: weather_api.getHoursForecastData(city['id'], passport['apikey']))
+        getNextHoursWeatherWorker = RequestWorker(lambda: weather_api.getHoursForecastData(self.config['city']['id'], self.config['apikey']))
         getNextHoursWeatherWorker.signals.result.connect(lambda objdata: self.updateNextHoursWeather(objdata['list']))
         
         self.threadpool.start(getCurrentWeatherWorker)
@@ -49,13 +65,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.labelCity.setText(f"city: {cityName} in country: {cityCountry}")
 
     def updateNextHoursWeather(self, weatherList):
+        for i in range(self.weatherList.count()):
+            self.weatherList.removeWidget(self.weatherList.takeAt(i))
         for item in weatherList:
             widget = QWidget(parent=self)
             layout = QHBoxLayout()
 
             temp = QLabel(f"температура {item['main']['temp']}°C")
             icon = QLabel()
-            self.setIconToLabel(icon, item['weather'][0]['icon'])
+            setIconToLabel(icon, item['weather'][0]['icon'])
 
             dtime = datetime.fromtimestamp(item['dt'])
             time =  QLabel('В %s часов %s' % (dtime.strftime('%H'), dtime.strftime('%d.%m')))
@@ -69,14 +87,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def updateCurrentWeather(self, description, temp):
         weatherStr = f"""
-        Сейчас в {city['where']} {description}\n
+        Сейчас в {self.config['city']['name']} {description}\n
         температура {temp}°C
         """
         self.current.setText(weatherStr)
-
-    def setIconToLabel(self, label, icon):
-        pxm = QPixmap(f'./img/{icon}.png')
-        label.setPixmap(pxm)
 
 class RequestWorker(QRunnable):
     class Signals(QObject):
