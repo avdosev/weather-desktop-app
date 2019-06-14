@@ -29,17 +29,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.setting = QSettings()
         default_setting = readJsonFromFile('./default_setting.json')
-        citylist = readJsonFromFile('./city_list.json')
 
         apikey = self.setting.value('setting/apikey', defaultValue=default_setting['apikey'], type=str)
-        cityID = self.setting.value('setting/cityID', defaultValue=default_setting['cityID'], type=int)
+        cityID = self.setting.value('setting/city/id', defaultValue=default_setting['city']['id'], type=int)
+        cityName = self.setting.value('setting/city/name', defaultValue=default_setting['city']['name'], type=str)
+        cityCountry = self.setting.value('setting/city/country', defaultValue=default_setting['city']['country'], type=str)
 
         print(apikey, cityID)
         print(self.setting.fileName())
 
         self.config = {
             'apikey': apikey,
-            'city': [city for city in citylist if city['id'] == cityID][0]
+            'city': {
+                'id': cityID,
+                'name': cityName,
+                'country': cityCountry
+            }
         }
 
         self.updateData()

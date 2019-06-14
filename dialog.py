@@ -4,15 +4,29 @@ from PyQt5.QtCore import Qt
 def showChangeLocationDialog():
    dialog = QDialog()
    dialog.setWindowTitle("Region setting")
-   dialog.set
-   layout = QFormLayout(parent=dialog)
+
+   cityIDLineEdit = QLineEdit(parent=dialog)
+   nameCityLineEdit = QLineEdit(parent=dialog)
+   nameCountryLineEdit = QLineEdit(parent=dialog)
    
-   layout.addRow("Имя пользователя:", QLineEdit())
-   # layout.addRow("Электропочта:", eMail)
-   # layout.addRow("Пароль:", passWord)
-   # layout.addRow("Закрепим успех:", passWordAgain)
-   buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel | QDialogButtonBox.Save, parent=dialog)
+   layout = QFormLayout()
+   
+   layout.addRow("id твоего города:", cityIDLineEdit)
+   layout.addRow('имя мухосранска:', nameCityLineEdit)
+   layout.addRow('родина:', nameCountryLineEdit)
+
+   
+   buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel | QDialogButtonBox.Save)
    buttonBox.accepted.connect(dialog.accept)
    buttonBox.rejected.connect(dialog.reject)
-   dialog.exec_()
-   return dialog
+
+   centralLayout = QVBoxLayout(dialog)
+   centralLayout.addLayout(layout)
+   centralLayout.addWidget(buttonBox)
+
+   code = dialog.exec_()
+   return code, {
+      'id': cityIDLineEdit.text,
+      'name': nameCityLineEdit.text,
+      'country': nameCountryLineEdit.text
+   }
