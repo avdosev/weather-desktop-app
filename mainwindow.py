@@ -27,24 +27,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         default_setting = readJsonFromFile('./default_setting.json')
         citylist = readJsonFromFile('./city_list.json')
 
-        # apikey = self.setting.value('setting/apikey', defaultValue=default_setting['apikey'], type=str)
-        # cityID = self.setting.value('setting/cityID', defaultValue=default_setting['cityID'],type=int)
-        apikey = self.setting.value('setting/apikey', type=str)
-        cityID = self.setting.value('setting/cityID', type=int)
+        apikey = self.setting.value('setting/apikey', defaultValue=default_setting['apikey'], type=str)
+        cityID = self.setting.value('setting/cityID', defaultValue=default_setting['cityID'], type=int)
 
         print(apikey, cityID)
+        print(self.setting.fileName())
 
-        for city in citylist:
-            if city['id'] == cityID:
-                self.config = {
-                    'apikey':apikey,
-                    'city': city
-                }
-                break
+        self.config = {
+            'apikey': apikey,
+            'city': [city for city in citylist if city['id'] == cityID][0]
+        }
 
         self.updateData()
 
     def __del__(self):
+        print(self.config)
         self.setting.setValue('setting/apikey', self.config['apikey'])
         self.setting.setValue('setting/cityID', self.config['city']['id'])
         self.setting.sync()
