@@ -8,7 +8,7 @@ from mainwindow_ui import Ui_MainWindow
 from request_worker import RequestWorker
 import weather_request as weather_api
 from read_json_file import readJsonFromFile
-from dialog import showdialog
+from dialog import *
 
 def setIconToLabel(label, icon):
     pxm = QPixmap(f'./img/{icon}.png')
@@ -94,4 +94,4 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.current.setText(weatherStr)
 
     def changeLocation(self):
-        showdialog()
+        showChangeLocationDialog()
