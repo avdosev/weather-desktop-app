@@ -38,7 +38,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>356</width>
+               <width>366</width>
                <height>376</height>
               </rect>
              </property>
@@ -78,14 +78,20 @@
     <property name="title">
      <string>настройки</string>
     </property>
-    <addaction name="action"/>
+    <addaction name="changeLocationBtn"/>
+    <addaction name="changeUiBtn"/>
    </widget>
    <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="action">
+  <action name="changeLocationBtn">
    <property name="text">
-    <string>типо тут что то есть</string>
+    <string>Изменить регион</string>
+   </property>
+  </action>
+  <action name="changeUiBtn">
+   <property name="text">
+    <string>Изменить интерфейс</string>
    </property>
   </action>
  </widget>

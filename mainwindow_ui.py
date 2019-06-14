@@ -30,7 +30,7 @@ class Ui_MainWindow(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollWidget = QtWidgets.QWidget()
-        self.scrollWidget.setGeometry(QtCore.QRect(0, 0, 356, 376))
+        self.scrollWidget.setGeometry(QtCore.QRect(0, 0, 366, 376))
         self.scrollWidget.setObjectName("scrollWidget")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.scrollWidget)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
@@ -56,9 +56,12 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.action = QtWidgets.QAction(MainWindow)
-        self.action.setObjectName("action")
-        self.menu.addAction(self.action)
+        self.changeLocationBtn = QtWidgets.QAction(MainWindow)
+        self.changeLocationBtn.setObjectName("changeLocationBtn")
+        self.changeUiBtn = QtWidgets.QAction(MainWindow)
+        self.changeUiBtn.setObjectName("changeUiBtn")
+        self.menu.addAction(self.changeLocationBtn)
+        self.menu.addAction(self.changeUiBtn)
         self.menubar.addAction(self.menu.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -69,6 +72,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.current.setText(_translate("MainWindow", "Сейчас"))
         self.menu.setTitle(_translate("MainWindow", "настройки"))
-        self.action.setText(_translate("MainWindow", "типо тут что то есть"))
+        self.changeLocationBtn.setText(_translate("MainWindow", "Изменить регион"))
+        self.changeUiBtn.setText(_translate("MainWindow", "Изменить интерфейс"))
 
 
